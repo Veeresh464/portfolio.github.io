@@ -235,7 +235,7 @@ img {
     height: 40px;
     background: rgba(108, 99, 255, 0.1);
     border-radius: 50%;
-    margin-right: 5px;
+    margin-right: 2px;
 }
 
 .nav-links {
@@ -263,8 +263,7 @@ img {
     transition: var(--transition);
 }
 
-.nav-link:hover::after,
-.nav-link.active::after {
+.nav-link:hover::after{
     width: 100%;
 }
 
@@ -308,7 +307,7 @@ img {
 }
 
 .hero-title {
-    font-size: 4rem;
+    font-size: 3.4rem;
     font-weight: 700;
     line-height: 1.2;
     margin-bottom: 20px;
@@ -984,3 +983,239 @@ img {
         grid-template-columns: 1fr;
     }
 }
+
+/* ===== Education Section ===== */
+
+/* .education {
+    background-color: #f9f9f9;
+} */
+
+.education-container {
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.education-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50px;
+    height: 100%;
+    width: 2px;
+    background: var(--primary-color);
+    opacity: 0.3;
+}
+
+.education-item {
+    position: relative;
+    padding-left: 100px;
+    margin-bottom: 50px;
+}
+
+.education-icon {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 80px;
+    height: 80px;
+    background: var(--white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--box-shadow);
+    z-index: 1;
+}
+
+.education-icon i {
+    font-size: 2rem;
+    color: var(--primary-color);
+}
+
+.education-content {
+    background: var(--white);
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+}
+
+.education-item:hover .education-content {
+    transform: translateY(-5px);
+    box-shadow: var(--box-shadow-hover);
+}
+
+.education-content h3 {
+    font-size: 1.5rem;
+    color: var(--dark-color);
+    margin-bottom: 10px;
+}
+
+.education-content h4 {
+    font-size: 1.1rem;
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    font-weight: 500;
+}
+
+.education-date {
+    display: inline-block;
+    background: rgba(108, 99, 255, 0.1);
+    color: var(--primary-color);
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+}
+
+.education-content p {
+    color: var(--text-light);
+    margin-bottom: 5px;
+}
+
+
+/* Responsive Education Section */
+@media (max-width: 768px) {
+    .education-container::before {
+        left: 40px;
+    }
+    
+    .education-item {
+        padding-left: 80px;
+    }
+    
+    .education-icon {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .education-icon i {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .education-container::before {
+        left: 30px;
+    }
+    
+    .education-item {
+        padding-left: 60px;
+    }
+    
+    .education-icon {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .education-content {
+        padding: 20px;
+    }
+    
+    .education-content h3 {
+        font-size: 1.3rem;
+    }
+    
+    .education-content h4 {
+        font-size: 1rem;
+    }
+}
+
+
+/* ===== Domain Section ===== */
+
+/* .domain {
+    background: var(--white);
+} */
+
+.domain-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.domain-item {
+    display: flex;
+    margin-bottom: 40px;
+    background: var(--white);
+    border-radius: 10px;
+    box-shadow: var(--box-shadow);
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.domain-item:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--box-shadow-hover);
+}
+
+.domain-icon {
+    width: 80px;
+    background: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-size: 2rem;
+}
+
+.domain-content {
+    padding: 30px;
+    flex: 1;
+}
+
+.domain-content h3 {
+    font-size: 1.5rem;
+    color: var(--dark-color);
+    margin-bottom: 15px;
+}
+
+.domain-content p {
+    color: var(--text-light);
+    margin-bottom: 20px;
+}
+
+.domain-skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.domain-skills span {
+    background: rgba(108, 99, 255, 0.1);
+    color: var(--primary-color);
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+}
+
+/* Responsive Domain Section */
+@media (max-width: 768px) {
+    .domain-item {
+        flex-direction: column;
+    }
+    
+    .domain-icon {
+        width: 100%;
+        height: 60px;
+    }
+    
+    .domain-content {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 576px) {
+    .domain-content h3 {
+        font-size: 1.3rem;
+    }
+    
+    .domain-skills {
+        gap: 8px;
+    }
+    
+    .domain-skills span {
+        font-size: 0.7rem;
+    }
+}
+
