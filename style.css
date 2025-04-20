@@ -438,7 +438,7 @@ img {
 
 .about-text p {
     margin-bottom: 20px;
-    color: var(--text-light);
+    color: var(--text-color);
     font-size: 1.1rem;
 }
 
@@ -1219,3 +1219,32 @@ img {
     }
 }
 
+/* text slider */
+.wrapper {
+    height: 1.5rem;
+    /*This part is important for centering*/
+    display: grid;
+    place-items:inherit;
+  }
+  
+  .typing-demo {
+    width: 15rem;
+    animation: typing 3s steps(22), blink .58s step-end infinite alternate;
+    white-space: nowrap;
+    overflow: hidden;
+    border-right: 3px solid;
+    font-family: monospace;
+    font-size: 1rem;
+  }
+  
+  @keyframes typing {
+    from {
+      width: 0
+    }
+  }
+      
+  @keyframes blink {
+    50% {
+      border-color: transparent
+    }
+  }
