@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Music System Design</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Material+Icons">
+    <style>
+        :root {
+            --yt-red: #FF0000;
+            --yt-dark: #282828;
+            --yt-light: #f9f9f9;
+            --yt-gray: #606060;
+            --yt-light-gray: #e0e0e0;
+            --yt-card-bg: #ffffff;
+            --yt-card-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            --yt-accent: #4285F4;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--yt-light);
+            color: var(--yt-dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .cursor-effect {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: var(--yt-red);
+            pointer-events: none;
+            mix-blend-mode: multiply;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+            transition: transform 0.1s ease;
+        }
+
+        .cursor-effect.follow {
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 0, 0, 0.2);
+            transition: all 0.3s ease, transform 0.1s ease;
+        }
+
+        header {
+            background-color: var(--yt-dark);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255,0,0,0.2) 0%, rgba(40,40,40,1) 100%);
+            z-index: 0;
+        }
+
+        header .content {
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto 2rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .yt-logo {
+            width: 120px;
+            margin-bottom: 1.5rem;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .intro-card {
+            background-color: var(--yt-card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            box-shadow: var(--yt-card-shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .intro-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .intro-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background-color: var(--yt-red);
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: var(--yt-red);
+            position: relative;
+            display: inline-block;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background-color: var(--yt-red);
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            margin: 1.5rem 0 1rem;
+            color: var(--yt-dark);
+        }
+
+        p {
+            margin-bottom: 1rem;
+            color: var(--yt-gray);
+        }
+
+        .architecture-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .architecture-card {
+            background-color: var(--yt-card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--yt-card-shadow);
+            transition: transform 0.3s ease;
+            border-top: 4px solid var(--yt-accent);
+        }
+
+        .architecture-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .architecture-card h4 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--yt-accent);
+        }
+
+        .architecture-card ul {
+            padding-left: 1.5rem;
+        }
+
+        .architecture-card li {
+            margin-bottom: 0.5rem;
+            color: var(--yt-gray);
+        }
+
+        .algorithms-section {
+            margin: 3rem 0;
+        }
+
+        .algorithm-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--yt-light-gray);
+        }
+
+        .algorithm-tab {
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--yt-gray);
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .algorithm-tab.active {
+            color: var(--yt-red);
+            border-bottom: 3px solid var(--yt-red);
+        }
+
+        .algorithm-tab:hover:not(.active) {
+            color: var(--yt-dark);
+            border-bottom: 3px solid var(--yt-light-gray);
+        }
+
+        .algorithm-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .algorithm-content.active {
+            display: block;
+        }
+
+        .feature-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .feature-card {
+            background-color: var(--yt-card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: var(--yt-card-shadow);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--yt-red), var(--yt-accent));
+        }
+
+        .feature-card h3 {
+            color: var(--yt-red);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .feature-card .data-structure {
+            display: inline-block;
+            background-color: rgba(66, 133, 244, 0.1);
+            color: var(--yt-accent);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card .algorithm {
+            display: inline-block;
+            background-color: rgba(255, 0, 0, 0.1);
+            color: var(--yt-red);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            margin-left: 0.5rem;
+        }
+
+        .feature-card .complexity {
+            display: inline-block;
+            background-color: rgba(40, 40, 40, 0.1);
+            color: var(--yt-dark);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            margin-left: 0.5rem;
+        }
+
+        .feature-card ul {
+            padding-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card li {
+            margin-bottom: 0.5rem;
+            color: var(--yt-gray);
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .comparison-table th, .comparison-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--yt-light-gray);
+        }
+
+        .comparison-table th {
+            background-color: var(--yt-red);
+            color: white;
+            font-weight: 500;
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background-color: rgba(255, 0, 0, 0.03);
+        }
+
+        .comparison-table tr:hover {
+            background-color: rgba(255, 0, 0, 0.05);
+        }
+
+        footer {
+            background-color: var(--yt-dark);
+            color: white;
+            padding: 3rem 0;
+            text-align: center;
+            margin-top: 3rem;
+        }
+
+        footer p {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 1rem;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--yt-red);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .highlight {
+            background-color: rgba(255, 0, 0, 0.1);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .material-icons {
+            vertical-align: middle;
+            margin-right: 0.3rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .feature-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .architecture-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="cursor-effect"></div>
+    <div class="cursor-effect follow"></div>
+
+    <header>
+        <div class="content">
+            <svg class="yt-logo" viewBox="0 0 90 20" fill="white">
+                <g>
+                    <path d="M27.9727 3.12324C27.6435 1.89323 26.6768 0.926623 25.4468 0.597366C23.2197 2.24288e-07 14.285 0 14.285 0C14.285 0 5.35042 2.24288e-07 3.12323 0.597366C1.89323 0.926623 0.926623 1.89323 0.597366 3.12324C2.24288e-07 5.35042 0 10 0 10C0 10 2.24288e-07 14.6496 0.597366 16.8768C0.926623 18.1068 1.89323 19.0734 3.12323 19.4026C5.35042 20 14.285 20 14.285 20C14.285 20 23.2197 20 25.4468 19.4026C26.6768 19.0734 27.6435 18.1068 27.9727 16.8768C28.5701 14.6496 28.5701 10 28.5701 10C28.5701 10 28.5701 5.35042 27.9727 3.12324Z" fill="red"></path>
+                    <path d="M11.4253 14.2854L18.8477 10.0004L11.4253 5.71533V14.2854Z" fill="white"></path>
+                </g>
+                <g fill="white">
+                    <path d="M36.4294 13.5714V6.42859H39.6435V13.5714H36.4294ZM42.8579 13.5714V6.42859H46.072V13.5714H42.8579ZM56.4294 6.42859L52.2151 11.4286V6.42859H49.001V13.5714H52.2151L56.4294 8.57143V13.5714H59.6435V6.42859H56.4294ZM62.858 13.5714V6.42859H66.0721V9.99999H72.5015V6.42859H75.7156V13.5714H72.5015V10H66.0721V13.5714H62.858ZM79.2873 13.5714V6.42859H89.7159V9.28571H82.5014V10H89.7159V12.8571H82.5014V13.5714H89.7159V16.4286H79.2873V13.5714Z"></path>
+                </g>
+            </svg>
+            <h1>YouTube Music System Design</h1>
+            <p class="subtitle">Exploring the architecture, algorithms, and data structures powering the world's most advanced music streaming platform</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="intro-card">
+            <h2>Introduction</h2>
+            <p>YouTube Music is a music streaming service developed by Google that offers access to a vast library of songs, albums, playlists, remixes, live performances, and user-generated content such as covers, all sourced from YouTube's extensive platform.</p>
+            <p>As a software developer with a passion for music and technology, I've chosen YouTube Music for its influential role in music streaming and its robust platform for algorithmic development. It not only enriches the listening experience but also provides an ideal environment to apply cutting-edge algorithms and data structures.</p>
+            <p>Key objectives include exploring and determining the efficient solutions for music recommendation, playlist generation, data analysis, and user management. Each section showcases the application of theoretical concepts in practical settings, emphasizing innovation and optimization within YouTube Music's dynamic platform.</p>
+        </div>
+
+        <div class="architecture-section">
+            <h2>Architecture Overview</h2>
+            <p>YouTube Music is built atop Google's cloud-scale infrastructure and shares many components with YouTube:</p>
+            
+            <div class="architecture-grid">
+                <div class="architecture-card">
+                    <h4>Frontend</h4>
+                    <p>Cross-platform interfaces (Android, iOS, Web) built using React/Flutter-like frameworks with REST/GraphQL for data communication.</p>
+                </div>
+                
+                <div class="architecture-card">
+                    <h4>Backend Services</h4>
+                    <p>Microservices architecture running in <span class="highlight">Google Kubernetes Engine (GKE)</span>.</p>
+                </div>
+                
+                <div class="architecture-card">
+                    <h4>In-Memory Caching</h4>
+                    <ul>
+                        <li><span class="highlight">Redis/Memcached</span> (in-memory key-value stores) are used to cache frequently accessed metadata like user playlists, recommendations, and session data.</li>
+                    </ul>
+                </div>
+                
+                <div class="architecture-card">
+                    <h4>Cold Storage</h4>
+                    <ul>
+                        <li>Songs and video files are stored in <span class="highlight">Google Cloud Storage</span>.</li>
+                        <li>Metadata is stored in <span class="highlight">Bigtable</span> (for fast access) and <span class="highlight">Spanner</span> (for transactional consistency).</li>
+                    </ul>
+                </div>
+                
+                <div class="architecture-card">
+                    <h4>Memory Optimization</h4>
+                    <ul>
+                        <li>Uses <span class="highlight">LRU (Least Recently Used)</span> cache eviction.</li>
+                        <li>Efficient serialization (like Protocol Buffers) for transferring data between services.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="algorithms-section">
+            <h2>Algorithms Used</h2>
+            
+            <div class="algorithm-tabs">
+                <div class="algorithm-tab active" data-tab="recommendation">Recommendation & Ranking</div>
+                <div class="algorithm-tab" data-tab="search">Search and Retrieval</div>
+                <div class="algorithm-tab" data-tab="graph">Graph and Network</div>
+                <div class="algorithm-tab" data-tab="caching">Caching and Data Delivery</div>
+            </div>
+            
+            <div class="algorithm-content active" id="recommendation-content">
+                <ul>
+                    <li><span class="highlight">Collaborative Filtering</span> (using user-item interaction matrix)</li>
+                    <li><span class="highlight">Content-Based Ranking</span> (using metadata similarities)</li>
+                    <li><span class="highlight">PageRank Algorithm</span> (to rank trending or popular songs)</li>
+                    <li><span class="highlight">K-Means Clustering</span> (to group similar users or songs based on features)</li>
+                    <li><span class="highlight">Apriori Algorithm</span> (for association rule mining in playlist generation)</li>
+                    <li><span class="highlight">User-Based and Item-Based Nearest Neighbor Search</span> (for similarity detection)</li>
+                </ul>
+            </div>
+            
+            <div class="algorithm-content" id="search-content">
+                <ul>
+                    <li><span class="highlight">TF-IDF (Term Frequency--Inverse Document Frequency)</span> -- for content relevance scoring</li>
+                    <li><span class="highlight">BM25</span> -- an improved probabilistic ranking algorithm for keyword-based search</li>
+                    <li><span class="highlight">Levenshtein Distance (Edit Distance)</span> -- for spelling correction and fuzzy search</li>
+                    <li><span class="highlight">Prefix Matching</span> -- for auto-completion and suggestions</li>
+                    <li><span class="highlight">Inverted Indexing</span> -- for fast text search across song metadata and lyrics</li>
+                </ul>
+            </div>
+            
+            <div class="algorithm-content" id="graph-content">
+                <ul>
+                    <li><span class="highlight">Breadth-First Search (BFS)</span> -- for traversing content similarity or user interaction graphs</li>
+                    <li><span class="highlight">Dijkstra's Algorithm</span> -- occasionally used in backend routing or service graph analysis</li>
+                    <li><span class="highlight">Connected Components Detection</span> -- for grouping related content nodes</li>
+                    <li><span class="highlight">Random Walk with Restart</span> -- for personalized content discovery in graphs</li>
+                </ul>
+            </div>
+            
+            <div class="algorithm-content" id="caching-content">
+                <ul>
+                    <li><span class="highlight">Least Recently Used (LRU)</span> -- for memory cache eviction</li>
+                    <li><span class="highlight">Consistent Hashing</span> -- for load-balanced distributed caching and service sharding</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="data-structures-section">
+            <h2>Core Data Structures</h2>
+            <div class="feature-cards">
+                <div class="feature-card">
+                    <h3>Hash Tables</h3>
+                    <p>For quick access to cached metadata and user session info.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>Graphs</h3>
+                    <p>To model user-item interaction, content similarity, and co-listening patterns.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>Tries / Prefix Trees</h3>
+                    <p>Used in autocomplete/search suggestions.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>Heaps</h3>
+                    <p>Priority queues for top-N recommendation systems.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>Bloom Filters</h3>
+                    <p>To efficiently test content existence or duplication in large-scale systems.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>Inverted Indexes</h3>
+                    <p>For fast search and retrieval across millions of songs.</p>
+                </div>
+            </div>
+        </div>
+
+        <h2>Key Features & Implementation</h2>
+        
+        <div class="feature-cards">
+            <div class="feature-card">
+                <h3>Music Recommendation System</h3>
+                <span class="data-structure">Graph</span>
+                <span class="algorithm">Personalized PageRank</span>
+                <span class="complexity">O(V + E)</span>
+                
+                <p>YouTube Music uses a smart method called <span class="highlight">Personalized PageRank</span> to recommend songs and videos you might like. It works by building a <span class="highlight">network (or graph)</span> where each song or video is a point (called a node), and connections between them (like if two songs are often played one after another) are the lines (called edges).</p>
+                
+                <p>The system then <span class="highlight">simulates how a user might explore music</span>, randomly jumping from song to song, but often restarting from something the user recently listened to. This helps YouTube Music find not just similar songs, but also <span class="highlight">songs that are popular among people with similar listening habits</span>. It works well even if you're a new user or if a song is new, and it helps give you <span class="highlight">personalized suggestions quickly and accurately</span>.</p>
+                
+                <h4>Problems It Solves:</h4>
+                <ul>
+                    <li><span class="highlight">Cold-start</span>: Suggests relevant content even when items have few interactions by leveraging related nodes.</li>
+                    <li><span class="highlight">Session continuity</span>: Captures transitions between songs in a listening session.</li>
+                    <li><span class="highlight">Indirect relationships</span>: Finds connections not immediately visible (e.g., songs that are 2--3 hops away but related through others).</li>
+                    <li><span class="highlight">Real-time personalization</span>: Provides fast, session-aware recommendations.</li>
+                </ul>
+                
+                <p><a href="https://github.com/danieljunhee/Tutorial-on-Personalized-PageRank/blob/master/Personalized_PageRank_Tutorial.ipynb" target="_blank">Learn more about Personalized PageRank</a></p>
+            </div>
+            
+            <div class="feature-card">
+                <h3>Playlist Generation</h3>
+                <span class="data-structure">Linked List</span>
+                <span class="algorithm">Greedy Algorithm</span>
+                
+                <p>YT Music playlist generation feature allows users to create and manage personalized playlists seamlessly. This functionality uses a linked list data structure to handle the order and metadata of songs efficiently, making it easy to add, remove, or rearrange tracks.</p>
+                
+                <p>The linked list structure ensures that playlist operations, such as inserting or deleting songs, are performed with optimal time complexity. To enhance the playlist creation experience, YouTube Music employs a greedy algorithm for playlist optimization, which selects songs based on user preferences and listening habits, ensuring that each playlist offers a coherent and enjoyable listening experience.</p>
+                
+                <h4>Operation Complexity Comparison</h4>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Operation</th>
+                            <th>Singly Linked List</th>
+                            <th>Doubly Linked List</th>
+                            <th>Explanation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Insert at head</td>
+                            <td>O(1)</td>
+                            <td>O(1)</td>
+                            <td>Just change/add pointers at the beginning.</td>
+                        </tr>
+                        <tr>
+                            <td>Insert at tail</td>
+                            <td>O(n)</td>
+                            <td>O(1) (with tail ptr)</td>
+                            <td>Singly needs traversal; doubly can store a tail pointer.</td>
+                        </tr>
+                        <tr>
+                            <td>Insert in middle</td>
+                            <td>O(n)</td>
+                            <td>O(n)</td>
+                            <td>Requires traversal to the position first.</td>
+                        </tr>
+                        <tr>
+                            <td>Delete at head</td>
+                            <td>O(1)</td>
+                            <td>O(1)</td>
+                            <td>Adjust head pointer (and possibly prev in doubly).</td>
+                        </tr>
+                        <tr>
+                            <td>Delete at tail</td>
+                            <td>O(n)</td>
+                            <td>O(1) (with tail ptr)</td>
+                            <td>Singly must traverse; doubly can go backwards.</td>
+                        </tr>
+                        <tr>
+                            <td>Delete in middle</td>
+                            <td>O(n)</td>
+                            <td>O(n)</td>
+                            <td>Must find node first, then adjust links.</td>
+                        </tr>
+                        <tr>
+                            <td>Search</td>
+                            <td>O(n)</td>
+                            <td>O(n)</td>
+                            <td>Linear traversal needed (no indexing).</td>
+                        </tr>
+                        <tr>
+                            <td>Traversal (full)</td>
+                            <td>O(n)</td>
+                            <td>O(n)</td>
+                            <td>Visit all nodes once.</td>
+                        </tr>
+                        <tr>
+                            <td>Reverse list</td>
+                            <td>O(n)</td>
+                            <td>O(n)</td>
+                            <td>Re-link all nodes.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="feature-card">
+                <h3>Music Search</h3>
+                <span class="algorithm">Semantic/Vector Search</span>
+                <span class="complexity">O(log N)</span>
+                
+                <p><span class="highlight">Semantic/Vector Search</span> transforms the way we find music by understanding the <span class="highlight">meaning</span> or <span class="highlight">intent</span> behind your search query, rather than just matching keywords. It works by converting both your search query (like "upbeat song for working out" or "lyrics that go like 'shine bright like a diamond'") and the information about songs in the database (titles, lyrics, artist descriptions, genre, user tags) into numerical representations called "vector embeddings."</p>
+                
+                <p>Imagine a vast multi-dimensional space where each song and each query is a point (vector). Songs with similar meanings, moods, lyrical themes, or styles will be located close to each other in this space. When you search, the system converts your query into a vector and then efficiently finds the song vectors that are nearest to your query vector.</p>
+                
+                <h4>Advantages Over Traditional Search</h4>
+                <ul>
+                    <li><span class="highlight">Keyword Limitation & Literalness</span>: Semantic Search understands word meanings, so it can return songs like "joyful melody" when you search for "happy tune," even if exact words don't match.</li>
+                    <li><span class="highlight">Vague or Descriptive Queries</span>: It can interpret abstract queries like "instrumental music that feels like a space journey" by matching them with songs having similar contextual metadata.</li>
+                    <li><span class="highlight">Synonyms and Ambiguity</span>: Semantic embeddings recognize that words like "sad," "melancholy," and "blue" convey similar emotions, providing more accurate mood-based results.</li>
+                    <li><span class="highlight">Discovering Related but Not Obvious Content</span>: Instead of relying on exact terms, Semantic Search surfaces songs that are stylistically or thematically related based on proximity in vector space.</li>
+                </ul>
+                
+                <h4>Data Structures Used</h4>
+                <ul>
+                    <li><span class="highlight">Vector Embeddings</span>: Dense arrays capturing semantic meaning of queries and song metadata.</li>
+                    <li><span class="highlight">Vector Index</span>: Specialized structures (e.g., HNSW, FAISS, Annoy) enabling fast Approximate Nearest Neighbor (ANN) searches.</li>
+                </ul>
+            </div>
+            
+            <div class="feature-card">
+                <h3>Social Features</h3>
+                <span class="data-structure">Graph</span>
+                <span class="algorithm">BFS/DFS</span>
+                <span class="complexity">O(V + E)</span>
+                
+                <p>YT music social features allow users to connect with friends, share music, follow artists, and collaborate on playlists. These features use a graph data structure to model relationships and interactions between users and artists.</p>
+                
+                <p>By implementing algorithms such as <span class="highlight">Breadth-First Search (BFS)</span> and <span class="highlight">Depth-First Search (DFS)</span>, YouTube Music efficiently manages and traverses these connections, enabling users to discover new music through their social network.</p>
+                
+                <p>The social graph helps in generating personalized recommendations based on a user's social activity and preferences, fostering a community-oriented experience on the platform.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h3>Data Analysis and Insights</h3>
+                <span class="data-structure">Time Series</span>
+                <span class="algorithm">Time Series Analysis</span>
+                <span class="complexity">O(n log n)</span>
+                
+                <p>YT music provides insights into listening habits, trends, and user behavior through sophisticated data analytics. By leveraging time series analysis, YouTube Music can identify patterns in music consumption, predict future trends, and optimize recommendations.</p>
+                
+                <p>This involves processing large volumes of data, such as play counts, user interactions, and song popularity over time. The insights gained help in improving user engagement, targeting personalized content, and making informed business decisions. Time series data structures and analysis algorithms play a crucial role in efficiently managing and analyzing this temporal data.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h3>Notifications</h3>
+                <span class="data-structure">Event Queue</span>
+                <span class="algorithm">Event Handling</span>
+                <span class="complexity">O(1)</span>
+                
+                <p>YT music keeps users informed about new releases, updates, and personalized recommendations through its notification system. This feature enhances user engagement by alerting them to relevant content based on their preferences and listening history.</p>
+                
+                <p>Behind the scenes, it employs an <span class="highlight">event queue</span> data structure to efficiently manage and dispatch notifications. This ensures that users receive timely updates without overwhelming system resources. By utilizing event handling and dispatch algorithms, YouTube Music optimizes the delivery of notifications, enhancing the overall user experience.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h3>Track Uploading</h3>
+                <span class="data-structure">Distributed File System</span>
+                <span class="algorithm">File Handling</span>
+                
+                <p>Artists and users can upload music tracks to YouTube Music via the YouTube Studio platform or direct upload interfaces.</p>
+                
+                <h4>Functionality</h4>
+                <ul>
+                    <li>Manages audio file ingestion, metadata extraction (title, artist, genre), content validation, and linkage with YouTube's content ID system for copyright tracking and monetization.</li>
+                    <li>Integrates file storage systems with content databases and indexing services.</li>
+                </ul>
+                
+                <h4>Data Structures</h4>
+                <ul>
+                    <li><span class="highlight">Distributed File System</span> (e.g., Google File System)</li>
+                    <li><span class="highlight">Metadata Database</span> (e.g., Bigtable)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="#">Home</a>
+                <a href="#">About</a>
+                <a href="#">System Design</a>
+                <a href="#">Algorithms</a>
+                <a href="#">Contact</a>
+            </div>
+            <p>© 2023 YouTube Music System Design Exploration</p>
+            <p>This is an educational project demonstrating the system design and algorithms behind YouTube Music.</p>
+            <p>Not affiliated with Google or YouTube.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Cursor effects
+        const cursor = document.querySelector('.cursor-effect');
+        const cursorFollow = document.querySelector('.cursor-effect.follow');
+        
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+            
+            setTimeout(() => {
+                cursorFollow.style.left = e.clientX + 'px';
+                cursorFollow.style.top = e.clientY + 'px';
+            }, 100);
+        });
+        
+        document.addEventListener('mouseenter', () => {
+            cursor.style.opacity = '1';
+            cursorFollow.style.opacity = '1';
+        });
+        
+        document.addEventListener('mouseleave', () => {
+            cursor.style.opacity = '0';
+            cursorFollow.style.opacity = '0';
+        });
+        
+        // Algorithm tabs
+        const tabs = document.querySelectorAll('.algorithm-tab');
+        const contents = document.querySelectorAll('.algorithm-content');
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs and contents
+                tabs.forEach(t => t.classList.remove('active'));
+                contents.forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding content
+                tab.classList.add('active');
+                const tabId = tab.getAttribute('data-tab');
+                document.getElementById(`${tabId}-content`).classList.add('active');
+            });
+        });
+        
+        // Card hover effects
+        const cards = document.querySelectorAll('.feature-card, .architecture-card, .intro-card');
+        
+        cards.forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                card.style.setProperty('--mouse-x', `${x}px`);
+                card.style.setProperty('--mouse-y', `${y}px`);
+            });
+        });
+    </script>
+</body>
+</html>

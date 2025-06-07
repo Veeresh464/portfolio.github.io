@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenStack Load Balancing</title>
+    <style>
+        :root {
+            --primary: #ED1944;
+            --primary-dark: #C41E3A;
+            --dark-bg: #0a0a0a;
+            --card-bg: #1a1a1a;
+            --text: #ffffff;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        body {
+            background: var(--dark-bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        header {
+            text-align: center;
+            padding: 3rem 0;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        .card-scroller {
+            display: flex;
+            overflow-x: auto;
+            gap: 1.5rem;
+            padding: 2rem 0;
+            scroll-snap-type: x mandatory;
+        }
+        .card {
+            min-width: 300px;
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 1.5rem;
+            scroll-snap-align: start;
+            border-left: 4px solid var(--primary);
+        }
+        .card h3 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+        }
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+        th {
+            background: rgba(237,25,68,0.2);
+        }
+        section {
+            margin: 3rem 0;
+        }
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>OpenStack Load Balancing</h1>
+        <p>Advanced algorithms for cloud resource management</p>
+    </header>
+
+    <div class="container">
+        <section>
+            <h2>Introduction</h2>
+            <p>Load balancing in OpenStack is crucial for distributing workloads across computing resources to optimize utilization and performance. This portfolio explores various algorithms and their implementations.</p>
+        </section>
+
+        <section>
+            <h2>Load Balancing Algorithms</h2>
+            <div class="card-scroller">
+                <div class="card">
+                    <h3>Round Robin</h3>
+                    <p>Distributes requests sequentially across instances.</p>
+                    <p><strong>Complexity:</strong> O(1) time, O(n) space</p>
+                </div>
+                <div class="card">
+                    <h3>Weighted Round Robin</h3>
+                    <p>Assigns requests based on instance capacity.</p>
+                    <p><strong>Complexity:</strong> O(1) time, O(n) space</p>
+                </div>
+                <div class="card">
+                    <h3>Least Connections</h3>
+                    <p>Routes to instance with fewest active connections.</p>
+                    <p><strong>Complexity:</strong> O(n) time, O(n) space</p>
+                </div>
+                <div class="card">
+                    <h3>Least Load</h3>
+                    <p>Uses CPU/memory metrics for routing.</p>
+                    <p><strong>Complexity:</strong> O(n) time, O(n) space</p>
+                </div>
+                <div class="card">
+                    <h3>Ant Colony</h3>
+                    <p>Inspired by ant behavior patterns.</p>
+                    <p><strong>Complexity:</strong> O(kn²) time, O(n²) space</p>
+                </div>
+                <div class="card">
+                    <h3>Priority Queue</h3>
+                    <p>Processes requests by priority level.</p>
+                    <p><strong>Complexity:</strong> O(log n) time, O(n) space</p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Algorithm Comparison</h2>
+            <table>
+                <tr>
+                    <th>Algorithm</th>
+                    <th>Best For</th>
+                    <th>Pros</th>
+                    <th>Cons</th>
+                </tr>
+                <tr>
+                    <td>Round Robin</td>
+                    <td>Simple distribution</td>
+                    <td>Easy to implement</td>
+                    <td>Ignores instance capacity</td>
+                </tr>
+                <tr>
+                    <td>Weighted Round Robin</td>
+                    <td>Heterogeneous instances</td>
+                    <td>Accounts for capacity</td>
+                    <td>Static weights</td>
+                </tr>
+                <tr>
+                    <td>Least Connections</td>
+                    <td>Long-running connections</td>
+                    <td>Dynamic adaptation</td>
+                    <td>Ignores connection complexity</td>
+                </tr>
+                <tr>
+                    <td>Least Load</td>
+                    <td>Resource-intensive workloads</td>
+                    <td>Most accurate</td>
+                    <td>Requires monitoring</td>
+                </tr>
+                <tr>
+                    <td>Ant Colony</td>
+                    <td>Dynamic environments</td>
+                    <td>Self-learning</td>
+                    <td>Complex implementation</td>
+                </tr>
+                <tr>
+                    <td>Priority Queue</td>
+                    <td>Mixed criticality</td>
+                    <td>Priority handling</td>
+                    <td>Starvation risk</td>
+                </tr>
+            </table>
+        </section>
+
+        <section>
+            <h2>Implementation in OpenStack</h2>
+            <div class="card-scroller">
+                <div class="card">
+                    <h3>Nova</h3>
+                    <p>Compute service that manages VM instances</p>
+                </div>
+                <div class="card">
+                    <h3>Neutron</h3>
+                    <p>Networking service with LBaaS</p>
+                </div>
+                <div class="card">
+                    <h3>Ceilometer</h3>
+                    <p>Monitoring for load metrics</p>
+                </div>
+                <div class="card">
+                    <h3>Scheduler</h3>
+                    <p>Determines optimal instance placement</p>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>

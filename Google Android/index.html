@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Android OS - Interactive Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --android-green: #3DDC84;
+            --android-blue: #4285F4;
+            --android-red: #EA4335;
+            --android-yellow: #FBBC05;
+            --android-dark: #1a1a1a;
+            --android-light: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            overflow-x: hidden;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header with parallax effect */
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: linear-gradient(135deg, var(--android-green) 0%, var(--android-blue) 50%, var(--android-red) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="android" patternUnits="userSpaceOnUse" width="20" height="20"><circle cx="10" cy="10" r="2" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23android)"/></svg>');
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(2deg); }
+        }
+
+        .hero-content {
+            z-index: 2;
+            position: relative;
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 900;
+            color: white;
+            margin-bottom: 1rem;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            animation: slideInUp 1s ease-out;
+        }
+
+        .hero p {
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 2rem;
+            animation: slideInUp 1s ease-out 0.3s both;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Scroll indicator */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+            40% { transform: translateX(-50%) translateY(-10px); }
+            60% { transform: translateX(-50%) translateY(-5px); }
+        }
+
+        /* Section styling */
+        .section {
+            padding: 100px 0;
+            position: relative;
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.8s ease-out;
+        }
+
+        .section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .section:nth-child(even) {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .section:nth-child(odd) {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .section h2 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            margin-bottom: 2rem;
+            text-align: center;
+            font-weight: 800;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .section p {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            margin-bottom: 2rem;
+            text-align: center;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Functionalities grid */
+        .functionalities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .functionality-card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.4s ease;
+            border: 1px solid rgba(255,255,255,0.2);
+            transform: translateY(20px);
+            opacity: 0;
+        }
+
+        .functionality-card.visible {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .functionality-card:hover {
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .functionality-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--android-yellow);
+        }
+
+        /* Business cases */
+        .business-cases {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+
+        .business-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
+            backdrop-filter: blur(15px);
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255,255,255,0.3);
+            cursor: pointer;
+            transform: scale(0.9);
+            opacity: 0;
+        }
+
+        .business-card.visible {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .business-card:hover {
+            transform: scale(1.1) rotateY(5deg);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        }
+
+        /* Whale Optimization Algorithm */
+        .woa-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .woa-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .woa-feature {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 2rem;
+            transition: all 0.5s ease;
+            transform: translateX(-50px);
+            opacity: 0;
+        }
+
+        .woa-feature.visible {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .woa-feature:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateX(10px);
+        }
+
+        /* Complexity table */
+        .complexity-table {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-top: 2rem;
+            overflow-x: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .complexity-table table {
+            width: 100%;
+            border-collapse: collapse;
+            color: #333;
+        }
+
+        .complexity-table th,
+        .complexity-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .complexity-table th {
+            background: linear-gradient(135deg, var(--android-green), var(--android-blue));
+            color: white;
+            font-weight: 600;
+        }
+
+        .complexity-table tr:hover {
+            background: rgba(61, 220, 132, 0.1);
+            transform: scale(1.02);
+            transition: all 0.3s ease;
+        }
+
+        /* Floating elements */
+        .floating-element {
+            position: absolute;
+            opacity: 0.7;
+            animation: floatAround 15s ease-in-out infinite;
+        }
+
+        .floating-element:nth-child(1) { top: 10%; left: 10%; animation-delay: 0s; }
+        .floating-element:nth-child(2) { top: 20%; right: 15%; animation-delay: 5s; }
+        .floating-element:nth-child(3) { bottom: 20%; left: 20%; animation-delay: 10s; }
+
+        @keyframes floatAround {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(30px, -30px) rotate(90deg); }
+            50% { transform: translate(60px, 30px) rotate(180deg); }
+            75% { transform: translate(-30px, 60px) rotate(270deg); }
+        }
+
+        /* Android robot animation */
+        .android-robot {
+            width: 100px;
+            height: 100px;
+            background: var(--android-green);
+            border-radius: 50% 50% 0 0;
+            position: relative;
+            margin: 2rem auto;
+            animation: robotBounce 2s ease-in-out infinite;
+        }
+
+        .android-robot::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 30px;
+            left: 20px;
+        }
+
+        .android-robot::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 30px;
+            right: 20px;
+        }
+
+        @keyframes robotBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .section { padding: 60px 0; }
+            .functionalities-grid { grid-template-columns: 1fr; }
+            .business-cases { grid-template-columns: 1fr; }
+            .woa-features { grid-template-columns: 1fr; }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, var(--android-green), var(--android-blue));
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, var(--android-blue), var(--android-red));
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Android OS</h1>
+            <p>The World's Most Popular Mobile Operating System</p>
+            <div class="android-robot"></div>
+        </div>
+        <div class="scroll-indicator">
+            <p>Scroll to explore ↓</p>
+        </div>
+    </section>
+
+    <!-- Introduction Section -->
+    <section class="section">
+        <div class="container">
+            <h2>What is Android?</h2>
+            <p>Android is Google's open-source mobile operating system that powers billions of devices worldwide. It's built on the Linux kernel and designed primarily for touchscreen mobile devices such as smartphones and tablets. Android provides a rich application framework that allows developers to build innovative apps and games for mobile users.</p>
+            <p>From managing system resources to providing seamless user experiences, Android serves as the essential bridge between hardware components and the applications that users interact with daily.</p>
+        </div>
+    </section>
+
+    <!-- Functionalities Section -->
+    <section class="section">
+        <div class="container">
+            <h2>Core Functionalities</h2>
+            <div class="functionalities-grid">
+                <div class="functionality-card">
+                    <h3>Memory Management</h3>
+                    <p>Efficiently allocates and manages RAM for optimal app performance</p>
+                </div>
+                <div class="functionality-card">
+                    <h3>Process Scheduling</h3>
+                    <p>Prioritizes and manages running applications and system processes</p>
+                </div>
+                <div class="functionality-card">
+                    <h3>Device Management</h3>
+                    <p>Controls hardware components like camera, sensors, and connectivity</p>
+                </div>
+                <div class="functionality-card">
+                    <h3>File Management</h3>
+                    <p>Organizes and secures data storage across internal and external storage</p>
+                </div>
+                <div class="functionality-card">
+                    <h3>Security</h3>
+                    <p>Implements app sandboxing, permissions, and encryption protocols</p>
+                </div>
+                <div class="functionality-card">
+                    <h3>User Interface</h3>
+                    <p>Provides intuitive touch-based interactions and material design</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Data Structures Section -->
+    <section class="section">
+        <div class="container">
+            <h2>How Android Uses Data Structures</h2>
+            <p>Android's architecture relies heavily on sophisticated data structures and algorithms to deliver smooth performance. From activity stacks to memory management trees, these fundamental components enable efficient resource utilization and seamless multitasking.</p>
+            
+            <div class="business-cases">
+                <div class="business-card">Resource Management</div>
+                <div class="business-card">Security Framework</div>
+                <div class="business-card">Network Management</div>
+                <div class="business-card">File System</div>
+                <div class="business-card">Virtualization</div>
+                <div class="business-card">Application Support</div>
+                <div class="business-card">Backup & Recovery</div>
+                <div class="business-card">Real-time Processing</div>
+                <div class="business-card">Job Scheduling</div>
+                <div class="business-card">Cache Management</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Optimization Section -->
+    <section class="section woa-section">
+        <div class="container">
+            <h2>Android Optimization</h2>
+            <p>Modern Android systems employ advanced optimization algorithms inspired by nature, including the Whale Optimization Algorithm (WOA) for efficient resource allocation and performance tuning.</p>
+            
+            <div class="woa-features">
+                <div class="woa-feature">
+                    <h3>Adaptive Performance</h3>
+                    <p>Dynamic CPU and GPU scaling based on app requirements and thermal conditions</p>
+                </div>
+                <div class="woa-feature">
+                    <h3>Battery Optimization</h3>
+                    <p>Intelligent power management that learns user patterns and optimizes background processes</p>
+                </div>
+                <div class="woa-feature">
+                    <h3>Memory Compression</h3>
+                    <p>Advanced algorithms that compress inactive app data to maximize available RAM</p>
+                </div>
+                <div class="woa-feature">
+                    <h3>Predictive Loading</h3>
+                    <p>Machine learning models that predict and preload frequently used applications</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Floating elements -->
+        <div class="floating-element" style="width: 50px; height: 50px; background: rgba(255,255,255,0.2); border-radius: 50%;"></div>
+        <div class="floating-element" style="width: 30px; height: 30px; background: rgba(61,220,132,0.3); border-radius: 50%;"></div>
+        <div class="floating-element" style="width: 40px; height: 40px; background: rgba(66,133,244,0.3); border-radius: 50%;"></div>
+    </section>
+
+    <!-- Performance Metrics -->
+    <section class="section">
+        <div class="container">
+            <h2>Algorithm Complexities in Android</h2>
+            <p>Understanding the time and space complexities of core algorithms helps optimize Android applications for better performance.</p>
+            
+            <div class="complexity-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Algorithm/Data Structure</th>
+                            <th>Time Complexity</th>
+                            <th>Space Complexity</th>
+                            <th>Android Use Case</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Hash Tables</td>
+                            <td>O(1) avg</td>
+                            <td>O(n)</td>
+                            <td>App caching, Contact storage</td>
+                        </tr>
+                        <tr>
+                            <td>Binary Search Tree</td>
+                            <td>O(log n) avg</td>
+                            <td>O(n)</td>
+                            <td>File system indexing</td>
+                        </tr>
+                        <tr>
+                            <td>BFS and DFS</td>
+                            <td>O(V + E)</td>
+                            <td>O(V)</td>
+                            <td>Network discovery, UI traversal</td>
+                        </tr>
+                        <tr>
+                            <td>Dijkstra's Algorithm</td>
+                            <td>O((V + E) log V)</td>
+                            <td>O(V²)</td>
+                            <td>GPS navigation routing</td>
+                        </tr>
+                        <tr>
+                            <td>Round-Robin Scheduling</td>
+                            <td>O(1) per switch</td>
+                            <td>O(n)</td>
+                            <td>Process scheduling</td>
+                        </tr>
+                        <tr>
+                            <td>Trie Data Structure</td>
+                            <td>O(m)</td>
+                            <td>O(m) per node</td>
+                            <td>Autocomplete, spell check</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Intersection Observer for scroll animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        // Observe all sections and cards
+        document.addEventListener('DOMContentLoaded', () => {
+            const sections = document.querySelectorAll('.section');
+            const cards = document.querySelectorAll('.functionality-card, .business-card, .woa-feature');
+            
+            sections.forEach(section => observer.observe(section));
+            cards.forEach((card, index) => {
+                card.style.transitionDelay = `${index * 0.1}s`;
+                observer.observe(card);
+            });
+        });
+
+        // Smooth parallax scrolling effect
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const hero = document.querySelector('.hero');
+            const heroContent = document.querySelector('.hero-content');
+            
+            if (hero && heroContent) {
+                heroContent.style.transform = `translateY(${scrolled * 0.5}px)`;
+                hero.style.opacity = Math.max(0, 1 - scrolled / window.innerHeight);
+            }
+        });
+
+        // Add click interaction to business cards
+        document.querySelectorAll('.business-card').forEach(card => {
+            card.addEventListener('click', () => {
+                card.style.background = 'linear-gradient(135deg, rgba(61,220,132,0.3), rgba(66,133,244,0.3))';
+                setTimeout(() => {
+                    card.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1))';
+                }, 300);
+            });
+        });
+
+        // Enhanced table row interactions
+        document.querySelectorAll('.complexity-table tr').forEach(row => {
+            row.addEventListener('mouseenter', () => {
+                row.style.boxShadow = '0 5px 15px rgba(61,220,132,0.3)';
+            });
+            
+            row.addEventListener('mouseleave', () => {
+                row.style.boxShadow = 'none';
+            });
+        });
+
+        // Dynamic gradient animation for sections
+        let gradientIndex = 0;
+        const gradients = [
+            'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+            'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+            'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+            'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+        ];
+
+        setInterval(() => {
+            const sections = document.querySelectorAll('.section');
+            sections.forEach((section, index) => {
+                if (index % 2 === gradientIndex % 2) {
+                    section.style.background = gradients[gradientIndex % gradients.length];
+                }
+            });
+            gradientIndex++;
+        }, 10000);
+    </script>
+</body>
+</html>

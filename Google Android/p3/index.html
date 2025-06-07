@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Android OS Functionalities</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .card-hover-overlay {
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .card:hover .card-hover-overlay {
+      opacity: 1;
+      transform: scale(1);
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-6">
+
+  <div class="max-w-5xl w-full">
+    <h1 class="text-4xl font-bold text-center mb-10 text-gray-800">Functionalities of Android OS</h1>
+    <div class="grid gap-8 grid-cols-1 md:grid-cols-2">
+
+      <!-- Memory Management Card -->
+      <div class="card relative bg-white rounded-2xl shadow-lg overflow-hidden transition transform hover:scale-[1.02] duration-300">
+        <div class="p-6 z-10 relative">
+          <h2 class="text-xl font-semibold text-gray-900">Memory management</h2>
+          <p class="text-gray-700 mt-2">Android uses a paging system with OOM killer to manage memory efficiently across apps.</p>
+        </div>
+
+        <!-- Hover Overlay -->
+        <div class="card-hover-overlay absolute inset-0 bg-green-100 bg-opacity-95 p-6 rounded-2xl opacity-0 scale-95 pointer-events-none z-20">
+          <h3 class="text-lg font-bold mb-2 text-green-900">Key Algorithms in Android Memory Management</h3>
+          <ul class="list-disc list-inside text-gray-800 text-sm space-y-1">
+            <li>Paging & Swapping</li>
+            <li>Low Memory Killer (LMK) / OOM Reaper</li>
+            <li>ZRAM (compressed RAM)</li>
+            <li>Kernel Samepage Merging (KSM)</li>
+            <li>ASHMEM (Android Shared Memory)</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Process Scheduling Card -->
+      <div class="card relative bg-white rounded-2xl shadow-lg overflow-hidden transition transform hover:scale-[1.02] duration-300">
+        <div class="p-6 z-10 relative">
+          <h2 class="text-xl font-semibold text-gray-900">Process scheduling</h2>
+          <p class="text-gray-700 mt-2">Utilizes the Linux Completely Fair Scheduler (CFS) with Android-specific optimizations.</p>
+        </div>
+
+        <!-- Hover Overlay -->
+        <div class="card-hover-overlay absolute inset-0 bg-blue-100 bg-opacity-95 p-6 rounded-2xl opacity-0 scale-95 pointer-events-none z-20">
+          <h3 class="text-lg font-bold mb-2 text-blue-900">Key Features in Android Process Scheduling</h3>
+          <ul class="list-disc list-inside text-gray-800 text-sm space-y-1">
+            <li>Completely Fair Scheduler (CFS)</li>
+            <li>Real-time Scheduling with SCHED_FIFO</li>
+            <li>Binder IPC Thread Prioritization</li>
+            <li>CPUSet & Task Groups for process isolation</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>

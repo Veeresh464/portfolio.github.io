@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenStack Load Balancing Visualized</title>
+    <style>
+        :root {
+            --primary: #ED1944;
+            --primary-dark: #C41E3A;
+            --dark-bg: #0a0a0a;
+            --darker-bg: #050505;
+            --light-text: #ffffff;
+            --lighter-text: rgba(255, 255, 255, 0.9);
+            --muted-text: rgba(255, 255, 255, 0.7);
+            --card-bg: rgba(30, 30, 30, 0.8);
+            --border-color: rgba(237, 25, 68, 0.3);
+            --highlight: rgba(237, 25, 68, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--dark-bg);
+            color: var(--light-text);
+            line-height: 1.6;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--darker-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+            border-radius: 5px;
+        }
+
+        /* Typography */
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        /* Layout Components */
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .section {
+            padding: 100px 0;
+            position: relative;
+        }
+
+        .section-title {
+            font-size: 3rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            background: linear-gradient(45deg, var(--primary), #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 4px;
+            background: var(--primary);
+            margin: 1rem auto;
+            border-radius: 2px;
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, var(--darker-bg) 0%, var(--dark-bg) 100%);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 4.5rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(45deg, var(--primary), #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .hero p {
+            font-size: 1.4rem;
+            color: var(--muted-text);
+            margin-bottom: 2rem;
+            animation: fadeInUp 1s ease-out 0.2s both;
+        }
+
+        /* Algorithm Cards */
+        .algorithm-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .algorithm-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .algorithm-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, var(--highlight), transparent);
+            transition: 0.6s;
+        }
+
+        .algorithm-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(237, 25, 68, 0.2);
+            border-color: var(--primary);
+        }
+
+        .algorithm-card:hover::before {
+            left: 100%;
+        }
+
+        .algorithm-card h3 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .algorithm-card p {
+            color: var(--muted-text);
+            margin-bottom: 1.5rem;
+        }
+
+        .algorithm-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--muted-text);
+        }
+
+        /* Comparison Table */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 3rem 0;
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .comparison-table th {
+            background: rgba(237, 25, 68, 0.2);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .comparison-table tr:hover {
+            background: var(--highlight);
+        }
+
+        /* Visualization Section */
+        .visualization {
+            width: 100%;
+            height: 500px;
+            background: rgba(30, 30, 30, 0.5);
+            border-radius: 12px;
+            margin: 3rem 0;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .node {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: var(--card-bg);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid var(--border-color);
+            z-index: 2;
+        }
+
+        .node:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(237, 25, 68, 0.3);
+            border-color: var(--primary);
+        }
+
+        .node i {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .node span {
+            font-size: 0.8rem;
+            text-align: center;
+            color: var(--light-text);
+        }
+
+        .connection {
+            position: absolute;
+            height: 2px;
+            background: rgba(237, 25, 68, 0.5);
+            transform-origin: left center;
+            z-index: 1;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 3rem;
+            }
+
+            .section-title {
+                font-size: 2.5rem;
+            }
+
+            .algorithm-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .toc-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+            margin: 3rem auto;
+            max-width: 500px;
+            box-shadow: 0 0 20px rgba(237, 25, 68, 0.1);
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .toc-list {
+            list-style: none;
+            padding-left: 0;
+            margin-top: 1rem;
+        }
+
+        .toc-list li {
+            margin: 0.75rem 0;
+        }
+
+        .toc-list a {
+            color: var(--lighter-text);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            display: block;
+            border-left: 4px solid transparent;
+            transition: all 0.3s ease;
+            border-radius: 6px;
+            font-weight: 500;
+            background-color: transparent;
+        }
+
+        .toc-list a:hover {
+            background-color: var(--highlight);
+            border-left: 4px solid var(--primary);
+            color: var(--light-text);
+            padding-left: 1.2rem;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container hero-content">
+            <h1>OpenStack Load Balancing</h1>
+            <p>Exploring intelligent algorithms for optimized cloud resource distribution</p>
+        </div>
+    </section>
+
+    <!-- Introduction Section -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">Introduction</h2>
+            <p style="text-align: center; max-width: 800px; margin: 0 auto 3rem; color: var(--muted-text);">
+                Load balancing in OpenStack is crucial for distributing workloads across multiple computing resources to
+                optimize resource utilization, maximize throughput, minimize response time, and avoid overload of any
+                single resource.
+            </p>
+
+            <div class="visualization" id="loadBalancingViz">
+                <!-- Visualization will be populated by JavaScript -->
+            </div>
+        </div>
+    </section>
+
+
+
+
+
+
+    <div class="toc-card">
+        <h2 class="section-title">📘 Table of Contents</h2>
+        <ul class="toc-list">
+            <li><a href="#introduction">📌 Introduction</a></li>
+            <li><a href="#objectives">🎯 Objectives / Need of Portfolio</a></li>
+            <li><a href="#visuals">🖼️ Visuals</a></li>
+            <li><a href="#system-model">🛠️ System Model</a></li>
+            <li><a href="#algorithms">📊 Algorithms & Use Cases</a></li>
+            <li><a href="#monitoring">📡 Data Collection & Monitoring</a></li>
+            <li><a href="#aco">🐜 Ant Colony Optimization (ACO)</a></li>
+            <li><a href="#wrr">⚖️ Weighted Round Robin</a></li>
+            <li><a href="#rr">🔁 Round Robin</a></li>
+            <li><a href="#least-conn">🔗 Least Connections</a></li>
+            <li><a href="#least-load">📉 Least Load</a></li>
+            <li><a href="#fcfs">📬 FCFS Load Balancing</a></li>
+            <li><a href="#priority">📚 Priority Queue</a></li>
+            <li><a href="#sjf">⏳ Shortest Job First</a></li>
+            <li><a href="#dfs">🌲 DFS Load Balancing</a></li>
+            <li><a href="#bfs">🌐 BFS Load Balancing</a></li>
+            <li><a href="#bst">🌳 BST Load Balancing</a></li>
+            <li><a href="#challenges">⚠️ Challenges</a></li>
+            <li><a href="#todo">📝 To-Do</a></li>
+            <li><a href="#conclusion">🧾 Conclusion</a></li>
+            <li><a href="#references">📚 References</a></li>
+        </ul>
+    </div>
+
+
+
+
+
+
+
+
+
+
+    <!-- Algorithms Section -->
+    <section class="section" style="background: var(--darker-bg);">
+        <div class="container">
+            <h2 class="section-title">Load Balancing Algorithms</h2>
+
+            <div class="algorithm-grid">
+                <div class="algorithm-card">
+                    <h3>Round Robin</h3>
+                    <p>Distributes requests sequentially across all available instances in equal portions.</p>
+                    <div class="algorithm-stats">
+                        <div class="stat">
+                            <div class="stat-value">O(1)</div>
+                            <div class="stat-label">Time Complexity</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">O(n)</div>
+                            <div class="stat-label">Space Complexity</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">Simple</div>
+                            <div class="stat-label">Implementation</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="algorithm-card">
+                    <h3>Weighted Round Robin</h3>
+                    <p>Assigns requests based on instance capacity, giving more powerful instances more work.</p>
+                    <div class="algorithm-stats">
+                        <div class="stat">
+                            <div class="stat-value">O(1)</div>
+                            <div class="stat-label">Time Complexity</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">O(n)</div>
+                            <div class="stat-label">Space Complexity</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">Medium</div>
+                            <div class="stat-label">Implementation</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="algorithm-card">
+                    <h3>Least Connections</h3>
+                    <p>Directs new requests to the instance with the fewest active connections.</p>
+                    <div class="algorithm-stats">
+                        <div class="stat">
+                            <div class="stat-value">O(n)</div>
+                            <div class="stat-label">Time Complexity</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">O(n)</div>
+                            <div class="stat-label">Space Complexity</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">Medium</div>
+                            <div class="stat-label">Implementation</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="algorithm-card">
+                    <h3>Least Load</h3>
+                    <p>Routes requests to the instance with the lowest current CPU/memory utilization.</p>
+                    <div class="algorithm-stats">
+                        <div class="stat">
+                            <div class="stat-value">O(n)</div>
+                            <div class="stat-label">Time Complexity</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">O(n)</div>
+                            <div class="stat-label">Space Complexity</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">Complex</div>
+                            <div class="stat-label">Implementation</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="algorithm-card">
+                    <h3>Ant Colony Optimization</h3>
+                    <p>Inspired by ant behavior, uses pheromone trails to find optimal paths.</p>
+                    <div class="algorithm-stats">
+                        <div class="stat">
+                            <div class="stat-value">O(kn²)</div>
+                            <div class="stat-label">Time Complexity</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">O(n²)</div>
+                            <div class="stat-label">Space Complexity</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">Complex</div>
+                            <div class="stat-label">Implementation</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="algorithm-card">
+                    <h3>Priority Queue</h3>
+                    <p>Processes requests based on priority levels assigned to different tasks.</p>
+                    <div class="algorithm-stats">
+                        <div class="stat">
+                            <div class="stat-value">O(log n)</div>
+                            <div class="stat-label">Time Complexity</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">O(n)</div>
+                            <div class="stat-label">Space Complexity</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">Medium</div>
+                            <div class="stat-label">Implementation</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Comparison Section -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">Algorithm Comparison</h2>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Algorithm</th>
+                        <th>Best For</th>
+                        <th>Pros</th>
+                        <th>Cons</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Round Robin</td>
+                        <td>Simple, equal distribution</td>
+                        <td>Easy to implement, fair distribution</td>
+                        <td>Doesn't consider instance capacity</td>
+                    </tr>
+                    <tr>
+                        <td>Weighted Round Robin</td>
+                        <td>Heterogeneous instances</td>
+                        <td>Accounts for instance capacity</td>
+                        <td>Static weights may not reflect current load</td>
+                    </tr>
+                    <tr>
+                        <td>Least Connections</td>
+                        <td>Long-running connections</td>
+                        <td>Dynamic, adapts to current usage</td>
+                        <td>Doesn't consider connection complexity</td>
+                    </tr>
+                    <tr>
+                        <td>Least Load</td>
+                        <td>CPU/memory intensive workloads</td>
+                        <td>Most accurate for current conditions</td>
+                        <td>Requires constant monitoring</td>
+                    </tr>
+                    <tr>
+                        <td>Ant Colony</td>
+                        <td>Complex, dynamic environments</td>
+                        <td>Self-learning, adaptive</td>
+                        <td>Complex implementation</td>
+                    </tr>
+                    <tr>
+                        <td>Priority Queue</td>
+                        <td>Mixed criticality workloads</td>
+                        <td>Ensures important tasks get resources</td>
+                        <td>Risk of starvation for low-priority tasks</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Implementation Section -->
+    <section class="section" style="background: var(--darker-bg);">
+        <div class="container">
+            <h2 class="section-title">Implementation in OpenStack</h2>
+
+            <div class="visualization" id="openstackImplementation">
+                <!-- Implementation visualization -->
+            </div>
+
+            <div class="algorithm-grid" style="margin-top: 3rem;">
+                <div class="algorithm-card">
+                    <h3><i class="fas fa-chart-line"></i> Monitoring</h3>
+                    <p>Ceilometer collects metrics from compute nodes to inform load balancing decisions.</p>
+                </div>
+
+                <div class="algorithm-card">
+                    <h3><i class="fas fa-network-wired"></i> Neutron LBaaS</h3>
+                    <p>OpenStack Networking service provides load balancing as a service for distributed systems.</p>
+                </div>
+
+                <div class="algorithm-card">
+                    <h3><i class="fas fa-cogs"></i> Nova Scheduler</h3>
+                    <p>Uses filters and weights to determine optimal placement for new instances.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Create visualization for load balancing concepts
+        function createLoadBalancingVisualization() {
+            const container = document.getElementById('loadBalancingViz');
+
+            // Create nodes
+            const loadBalancer = createNode('Load Balancer', 'fas fa-balance-scale', '50%', '20%');
+            container.appendChild(loadBalancer);
+
+            // Create instances
+            const instances = [];
+            const instanceCount = 5;
+            for (let i = 0; i < instanceCount; i++) {
+                const x = 10 + (i * 20);
+                const instance = createNode(`Instance ${i + 1}`, 'fas fa-server', `${x}%`, '60%');
+                instances.push(instance);
+                container.appendChild(instance);
+
+                // Create connections
+                const connection = document.createElement('div');
+                connection.className = 'connection';
+                connection.id = `conn-${i}`;
+                container.appendChild(connection);
+            }
+
+            // Position connections
+            updateConnections();
+
+            // Animate connections to simulate different algorithms
+            let currentAlgorithm = 'roundRobin';
+            setInterval(() => {
+                currentAlgorithm = getNextAlgorithm(currentAlgorithm);
+                animateAlgorithm(currentAlgorithm, instances);
+            }, 3000);
+        }
+
+        function createNode(label, icon, left, top) {
+            const node = document.createElement('div');
+            node.className = 'node';
+            node.style.left = left;
+            node.style.top = top;
+            node.innerHTML = `<i class="${icon}"></i><span>${label}</span>`;
+            return node;
+        }
+
+        function updateConnections() {
+            const lb = document.querySelector('.node');
+            const lbRect = lb.getBoundingClientRect();
+            const lbX = lbRect.left + lbRect.width / 2;
+            const lbY = lbRect.top + lbRect.height / 2;
+
+            document.querySelectorAll('.node:not(:first-child)').forEach((node, i) => {
+                const nodeRect = node.getBoundingClientRect();
+                const nodeX = nodeRect.left + nodeRect.width / 2;
+                const nodeY = nodeRect.top + nodeRect.height / 2;
+
+                const length = Math.sqrt(Math.pow(nodeX - lbX, 2) + Math.pow(nodeY - lbY, 2);
+                const angle = Math.atan2(nodeY - lbY, nodeX - lbX) * 180 / Math.PI;
+
+                const conn = document.getElementById(`conn-${i}`);
+                conn.style.width = `${length}px`;
+                conn.style.left = `${lbX}px`;
+                conn.style.top = `${lbY}px`;
+                conn.style.transform = `rotate(${angle}deg)`;
+                conn.style.opacity = '0.2';
+            });
+        }
+
+        function getNextAlgorithm(current) {
+            const algorithms = ['roundRobin', 'weighted', 'leastConnections', 'leastLoad', 'antColony'];
+            const currentIndex = algorithms.indexOf(current);
+            return algorithms[(currentIndex + 1) % algorithms.length];
+        }
+
+        function animateAlgorithm(algorithm, instances) {
+            // Reset all connections
+            document.querySelectorAll('.connection').forEach(conn => {
+                conn.style.opacity = '0.2';
+                conn.style.backgroundColor = 'rgba(237,25,68,0.5)';
+            });
+
+            switch (algorithm) {
+                case 'roundRobin':
+                    // Highlight one connection at a time in order
+                    const nextIndex = (Math.floor(Date.now() / 1000) % instances.length);
+                    document.getElementById(`conn-${nextIndex}`).style.opacity = '1';
+                    break;
+
+                case 'weighted':
+                    // Highlight connections with different intensities based on "weight"
+                    instances.forEach((_, i) => {
+                        const weight = (i % 3) + 1; // Simulate different weights
+                        document.getElementById(`conn-${i}`).style.opacity = `${0.2 + (weight * 0.25)}`;
+                    });
+                    break;
+
+                case 'leastConnections':
+                    // Randomly select one with fewest "connections"
+                    const fewestConnIndex = Math.floor(Math.random() * instances.length);
+                    document.getElementById(`conn-${fewestConnIndex}`).style.opacity = '1';
+                    break;
+
+                case 'leastLoad':
+                    // Simulate different loads with connection colors
+                    instances.forEach((_, i) => {
+                        const load = Math.random();
+                        const hue = 120 - (load * 120); // Green to red based on load
+                        document.getElementById(`conn-${i}`).style.backgroundColor =
+                            `hsla(${hue}, 100%, 50%, ${1 - (load * 0.8)})`;
+                    });
+                    break;
+
+                case 'antColony':
+                    // Simulate pheromone trails with pulsating connections
+                    instances.forEach((_, i) => {
+                        const conn = document.getElementById(`conn-${i}`);
+                        const intensity = 0.2 + (Math.random() * 0.8);
+                        conn.style.opacity = intensity.toString();
+
+                        // Add animation
+                        conn.style.animation = `pulse 2s infinite`;
+                        document.styleSheets[0].insertRule(`
+                            @keyframes pulse {
+                                0% { opacity: ${intensity * 0.7}; }
+                                50% { opacity: ${intensity}; }
+                                100% { opacity: ${intensity * 0.7}; }
+                            }
+                        `, document.styleSheets[0].cssRules.length);
+                    });
+                    break;
+            }
+        }
+
+        // Create OpenStack implementation visualization
+        function createOpenStackImplementation() {
+            const container = document.getElementById('openstackImplementation');
+
+            // Create OpenStack services
+            const services = [
+                { name: 'Nova', icon: 'fas fa-server', x: '20%', y: '20%' },
+                { name: 'Neutron', icon: 'fas fa-network-wired', x: '50%', y: '20%' },
+                { name: 'Ceilometer', icon: 'fas fa-chart-line', x: '80%', y: '20%' },
+                { name: 'LBaaS', icon: 'fas fa-balance-scale', x: '35%', y: '50%' },
+                { name: 'Instances', icon: 'fas fa-cloud', x: '65%', y: '50%' },
+                { name: 'Scheduler', icon: 'fas fa-tasks', x: '50%', y: '80%' }
+            ];
+
+            services.forEach((service, i) => {
+                const node = createNode(service.name, service.icon, service.x, service.y);
+                container.appendChild(node);
+            });
+
+            // Add connections between services
+            const connections = [
+                { from: 0, to: 3 }, // Nova to LBaaS
+                { from: 1, to: 3 }, // Neutron to LBaaS
+                { from: 2, to: 3 }, // Ceilometer to LBaaS
+                { from: 3, to: 4 }, // LBaaS to Instances
+                { from: 0, to: 5 }, // Nova to Scheduler
+                { from: 5, to: 4 }  // Scheduler to Instances
+            ];
+
+            connections.forEach((conn, i) => {
+                const connection = document.createElement('div');
+                connection.className = 'connection';
+                connection.id = `impl-conn-${i}`;
+                container.appendChild(connection);
+            });
+
+            // Position connections
+            updateImplementationConnections();
+        }
+
+        function updateImplementationConnections() {
+            const nodes = document.querySelectorAll('#openstackImplementation .node');
+
+            document.querySelectorAll('#openstackImplementation .connection').forEach((conn, i) => {
+                // For simplicity, we'll just show all connections
+                // In a real implementation, we'd calculate positions like before
+                conn.style.opacity = '0.5';
+            });
+        }
+
+        // Initialize visualizations
+        document.addEventListener('DOMContentLoaded', () => {
+            createLoadBalancingVisualization();
+            createOpenStackImplementation();
+
+            // Update connections on resize
+            window.addEventListener('resize', () => {
+                updateConnections();
+                updateImplementationConnections();
+            });
+        });
+    </script>
+</body>
+
+</html>
